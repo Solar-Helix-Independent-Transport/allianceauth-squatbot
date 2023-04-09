@@ -43,17 +43,22 @@ class Squats(commands.Cog):
         total = 0
         for x in current[month_key].values():
             total += x
+        
+        gap = "          "
+        leaderboard = [f"{t}{gap[len(str(t)):10]}{c}" for c,t in {k: v for k, v in sorted(current[month_key].items(), key=lambda item: item[1], reverse=True)}.items()]
+        message = "\n".join(leaderboard[:10])
 
         # tasks.sqb_sync_losses.delay()
         e = Embed(title="SquatBot",
-                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses} ships, Authbot Demands `1:1` Squats per Loss!\n\nUse `/squatbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:")
+                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses} ships, Authbot Demands `1:1` Squats per Loss!\n\nUse `/squatbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
+
         e.add_field(name="Required Squats", value=f"{losses}")
         if losses - total > 0:
             e.add_field(name="Squat Deficit",
                         value=f"{losses - total}", inline=False)
         else:
             e.add_field(name="Squat Surplus",
-                        value=f"{losses - total}", inline=False)
+                        value=f"{abs(losses - total)}", inline=False)
 
         return await ctx.respond(embed=e)
 
