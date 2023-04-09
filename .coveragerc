@@ -1,0 +1,23 @@
+[run]
+branch = True
+source =
+    corptools
+
+omit =
+    */corptools/migrations/*
+    */corptools/audit_views/*
+    */corptools/task_helpers/*
+    */tests/*
+    */.tox/*
+    */bin/*
+
+[report]
+exclude_lines =
+    if self.debug:
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    def __repr__
+    raise AssertionError
+
+ignore_errors = True
