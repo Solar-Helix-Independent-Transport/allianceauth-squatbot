@@ -1,6 +1,7 @@
 # Cog Stuff
 from collections import defaultdict
 import logging
+from aadiscordbot.cogs.utils.decorators import is_admin
 
 from allianceauth.eveonline.evelinks import evewho
 from allianceauth.eveonline.models import EveAllianceInfo
@@ -47,10 +48,11 @@ class Squats(commands.Cog):
         gap = "          "
         leaderboard = [f"{t}{gap[len(str(t)):10]}{c}" for c,t in {k: v for k, v in sorted(current[month_key].items(), key=lambda item: item[1], reverse=True)}.items()]
         message = "\n".join(leaderboard[:10])
+        extra_message = cache.get(constants.MESSAGE_KEY, "")
 
         # tasks.sqb_sync_losses.delay()
         e = Embed(title="SquatBot",
-                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses} ships, Authbot Demands `1:1` Squats per Loss!\n\nUse `/squatbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
+                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses} ships, Authbot Demands Squats for each Loss!\n{extra_message}\nUse `/squatbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
 
         e.add_field(name="Required Squats", value=f"{losses}")
         if losses - total > 0:
@@ -62,19 +64,6 @@ class Squats(commands.Cog):
 
         return await ctx.respond(embed=e)
 
-    # @squat_commands.command(name='last_month', guild_ids=[int(settings.DISCORD_GUILD_ID)])
-    # async def slash_last_month(
-    #     self,
-    #     ctx,
-    # ):
-    #     """
-    #         Show the Squat Deficit/Surplus for the previous month.
-    #     """
-    #     c = cache.get(constants.LOSS_KEY, {})
-    #     month = c.get(timezone.now().strftime(constants.TZ_STRING), {})
-    #     losses = month.get(constants.JSON_LOS_KEY, 0)
-    #     tasks.sqb_sync_losses.delay()
-    #     return await ctx.respond(f"{self.ALLIANCE.alliance_name} requires {losses} more squats this month! use `/squatbot claim` to help with the goals!")
 
     @squat_commands.command(name='claim', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     @option("count", int, min_value=5, max_value=50, description="Number of squats to claim!",)
@@ -95,10 +84,27 @@ class Squats(commands.Cog):
             user = 0
 
         current[month_key][main_character] = user + count
-        setted = cache.set(constants.SQUAT_KEY, current, 60*60*24*30)
+        setted = cache.set(constants.SQUAT_KEY, current, 60*60*24*90)
         return await ctx.respond(f"{main_character} claimed {count} squats! Hell YEAH! :muscle:")
 
 
+    @squat_commands.command(name='message', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    @option("message", description="What extra message do you want?",)
+    async def slash_claim(
+        self,
+        ctx,
+        message
+    ):
+        if is_admin(ctx.author.id):
+            main_character = DiscordUser.objects.get(
+                uid=ctx.author.id).user.profile.main_character
+            msg = message.replace("\\n", "\n")
+            print(msg)
+            setted = cache.set(constants.MESSAGE_KEY, msg, 60*60*24*90)
+            return await ctx.respond(f"{main_character} set the message to\n {msg}")
+
+
+# is_admin
 def setup(bot):
     cog = Squats(bot)
     cog.ALLIANCE = EveAllianceInfo.objects.get(
