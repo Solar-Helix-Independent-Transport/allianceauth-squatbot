@@ -85,6 +85,14 @@ class Squats(commands.Cog):
 
         current[month_key][main_character] = user + count
         setted = cache.set(constants.SQUAT_KEY, current, 60*60*24*90)
+        
+        losses = month.get(constants.JSON_LOS_KEY, 0)
+        current = cache.get(constants.SQUAT_KEY, {month_key: {}})
+        total = 0
+        for x in current[month_key].values():
+            total += x
+        if total > losses:
+            return await ctx.respond(f"{main_character} claimed {count} squats! We are now ahead of the losses! HELL YEAH! :muscle:\nKeep it up!\nhttps://media3.giphy.com/media/Ub4kWebdWWJP2/giphy.gif")
         return await ctx.respond(f"{main_character} claimed {count} squats! Hell YEAH! :muscle:")
 
 
