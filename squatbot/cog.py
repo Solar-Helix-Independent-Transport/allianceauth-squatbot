@@ -63,6 +63,8 @@ class Squats(commands.Cog):
         month = c.get(month_key, {})
         losses = month.get(constants.JSON_LOS_KEY, 0) * 5
         current = cache.get(constants.SQUAT_KEY, {month_key: {}})
+        if not current.get(month_key, False):
+            current[month_key] = {}
         total = 0
         for x in current[month_key].values():
             total += x
