@@ -38,7 +38,7 @@ class Squats(commands.Cog):
         """
             Squats were so last month
         """
-        return await ctx.respond("Squats were so last month, try `\repbot status` instead", ephemeral=True)
+        return await ctx.respond("Squats were so last month, try `/repbot status` instead", ephemeral=True)
 
     @squat_commands.command(name='claim', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     async def sq_slash_claim(
@@ -48,7 +48,7 @@ class Squats(commands.Cog):
         """
             Squats were so last month
         """
-        return await ctx.respond("Squats were so last month, try `\repbot claim` instead", ephemeral=True)
+        return await ctx.respond("Squats were so last month, try `/repbot claim` instead", ephemeral=True)
 
     @rep_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     async def slash_stat(
