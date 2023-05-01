@@ -30,6 +30,26 @@ class Squats(commands.Cog):
     rep_commands = SlashCommandGroup("repbot", "AuthBot Demands REPS!", guild_ids=[
                                        int(settings.DISCORD_GUILD_ID)])
 
+    @squat_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    async def sq_slash_stat(
+        self,
+        ctx,
+    ):
+        """
+            Squats were so last month
+        """
+        return await ctx.respond("Squats were so last month, try `\repbot status` instead", ephemeral=True)
+
+    @squat_commands.command(name='claim', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    async def sq_slash_claim(
+        self,
+        ctx,
+    ):
+        """
+            Squats were so last month
+        """
+        return await ctx.respond("Squats were so last month, try `\repbot claim` instead", ephemeral=True)
+
     @rep_commands.command(name='status', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     async def slash_stat(
         self,
@@ -54,7 +74,7 @@ class Squats(commands.Cog):
 
         # tasks.sqb_sync_losses.delay()
         e = Embed(title="RepBot!",
-                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses} ships this month, Authbot Demands 5 Reps for each Loss!\n{extra_message}\nUse `/squatbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
+                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses} ships this month, Authbot Demands 5 Reps for each Loss!\n{extra_message}\nUse `/repbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
 
         e.add_field(name="Required Reps", value=f"{losses}")
         if losses - total > 0:
@@ -78,9 +98,10 @@ class Squats(commands.Cog):
         main_character = DiscordUser.objects.get(
             uid=ctx.author.id).user.profile.main_character
         current = cache.get(constants.SQUAT_KEY, {month_key: {}})
-        month = current.get(month_key, {})
-        user = month.get(main_character)
-
+        if not current.get(month_key, False):
+            current[month_key] = {}
+        user = current[month_key].get(main_character)
+            
         if user == None:
             current[month_key][main_character] = 0
             user = 0
@@ -88,6 +109,7 @@ class Squats(commands.Cog):
         current[month_key][main_character] = user + count
         setted = cache.set(constants.SQUAT_KEY, current, 60*60*24*90)
         
+        month = cache.get(constants.LOSS_KEY, {}).get(month_key, {})
         losses = month.get(constants.JSON_LOS_KEY, 0) * 5
         current = cache.get(constants.SQUAT_KEY, {month_key: {}})
         total = 0
@@ -100,7 +122,7 @@ class Squats(commands.Cog):
 
     @rep_commands.command(name='message', guild_ids=[int(settings.DISCORD_GUILD_ID)])
     @option("message", description="What extra message do you want?",)
-    async def slash_claim(
+    async def slash_msg(
         self,
         ctx,
         message
@@ -112,6 +134,16 @@ class Squats(commands.Cog):
             print(msg)
             setted = cache.set(constants.MESSAGE_KEY, msg, 60*60*24*90)
             return await ctx.respond(f"{main_character} set the message to\n {msg}")
+
+
+    @rep_commands.command(name='sync', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    async def slash_sync(
+        self,
+        ctx,
+    ):
+        if is_admin(ctx.author.id):
+            tasks.sqb_sync_losses.delay()
+            return await ctx.respond(f"Syncing Losses", ephemeral=True)
 
 
 # is_admin
