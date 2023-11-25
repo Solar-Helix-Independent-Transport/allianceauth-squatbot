@@ -18,6 +18,8 @@ from . import app_settings, constants, tasks
 
 logger = logging.getLogger(__name__)
 
+def get_squats_per():
+    return cache.get(constants.REPS_PER_LOSS_KEY, 1)
 
 class Squats(commands.Cog):
     ALLIANCE = None
@@ -61,7 +63,7 @@ class Squats(commands.Cog):
         c = cache.get(constants.LOSS_KEY, {})
         month_key = timezone.now().strftime(constants.TZ_STRING)
         month = c.get(month_key, {})
-        losses = month.get(constants.JSON_LOS_KEY, 0) * 5
+        losses = month.get(constants.JSON_LOS_KEY, 0) * get_squats_per()
         current = cache.get(constants.SQUAT_KEY, {month_key: {}})
         if not current.get(month_key, False):
             current[month_key] = {}
@@ -112,7 +114,7 @@ class Squats(commands.Cog):
         setted = cache.set(constants.SQUAT_KEY, current, 60*60*24*90)
         
         month = cache.get(constants.LOSS_KEY, {}).get(month_key, {})
-        losses = month.get(constants.JSON_LOS_KEY, 0) * 5
+        losses = month.get(constants.JSON_LOS_KEY, 0) * get_squats_per()
         current = cache.get(constants.SQUAT_KEY, {month_key: {}})
         total = 0
         for x in current.get(month_key,{}).values():
@@ -129,13 +131,15 @@ class Squats(commands.Cog):
         ctx,
         message
     ):
-        if is_admin(ctx.author.id):
+        if is_admin(ctx.author.id) or ctx.author.id in app_settings.SQUATBOT_ADMINS:
             main_character = DiscordUser.objects.get(
                 uid=ctx.author.id).user.profile.main_character
             msg = message.replace("\\n", "\n")
             print(msg)
             setted = cache.set(constants.MESSAGE_KEY, msg, 60*60*24*90)
             return await ctx.respond(f"{main_character} set the message to\n {msg}")
+        else:
+            return await ctx.respond(f"Hell No Bro... Get the Trainer to help!", ephemeral=True)
 
 
     @rep_commands.command(name='sync', guild_ids=[int(settings.DISCORD_GUILD_ID)])
@@ -143,9 +147,24 @@ class Squats(commands.Cog):
         self,
         ctx,
     ):
-        if is_admin(ctx.author.id):
+        if is_admin(ctx.author.id) or ctx.author.id in app_settings.SQUATBOT_ADMINS:
             tasks.sqb_sync_losses.delay()
             return await ctx.respond(f"Syncing Losses", ephemeral=True)
+        else:
+            return await ctx.respond(f"Hell No Bro... Get the Trainer to help!", ephemeral=True)
+
+
+    @rep_commands.command(name='set_reps', guild_ids=[int(settings.DISCORD_GUILD_ID)])
+    async def slash_set_reps(
+        self,
+        ctx,
+        reps_per_loss: int = 1
+    ):
+        if is_admin(ctx.author.id) or ctx.author.id in app_settings.SQUATBOT_ADMINS:
+            cache.set(constants.REPS_PER_LOSS_KEY, reps_per_loss, timeout=60*60*24*365)
+            return await ctx.respond(f"Set the requirement to {reps_per_loss} per loss")
+        else:
+            return await ctx.respond(f"Hell No Bro... Get the Trainer to set the reps!", ephemeral=True)
 
 
 # is_admin
