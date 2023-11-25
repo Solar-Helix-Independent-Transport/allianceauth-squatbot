@@ -78,7 +78,7 @@ class Squats(commands.Cog):
 
         # tasks.sqb_sync_losses.delay()
         e = Embed(title="RepBot!",
-                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses/5} ships this month, Authbot Demands 5 Reps for each Loss!\n{extra_message}\nUse `/repbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
+                  description=f"`{self.ALLIANCE.alliance_name}` has lost {losses/get_squats_per()} ships this month, Authbot Demands {get_squats_per()} Reps for each Loss!\n{extra_message}\nUse `/repbot claim` to get swole! :muscle: \nNO CHEATING AuthBot will know!! :eyes:\n\n**Top 10 leaderboard:**\n```\n{message}\n```")
 
         e.add_field(name="Required Reps", value=f"{losses}")
         if losses - total > 0:
